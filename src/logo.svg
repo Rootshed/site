@@ -8,6 +8,11 @@
     <path d="M470 700 Q440 740 400 740"/>
     <path d="M580 700 Q620 730 650 720"/>
   </g>
+  <!-- pine tree behind the shed, above the roots -->
+  <g transform="translate(68 30)">
+  <path d="M446 296 L440 215 L462 213" stroke="#3b2a1a" stroke-width="14" fill="none" stroke-linecap="round"/>
+  <path d="M452 80 L370 190 L420 186 L350 262 L416 256 L400 300 L506 298 L488 252 L552 258 L486 184 L536 190 Z" fill="#3f7a46" stroke="#3b2a1a" stroke-width="10" stroke-linejoin="round"/>
+  </g>
   <defs>
     <clipPath id="above-ground"><path d="M0 0 H1024 V636 L964 636 Q740 656 520 642 Q300 628 60 640 L0 640 Z"/></clipPath>
   </defs>
@@ -24,8 +29,5 @@
   </g>
   <!-- ground -->
   <path d="M60 640 Q300 628 520 642 T964 636" stroke="#3b2a1a" stroke-width="14" fill="none" stroke-linecap="round"/>
-  <!-- pine tree on the roof -->
-  <path d="M446 296 L440 215 L462 213" stroke="#3b2a1a" stroke-width="14" fill="none" stroke-linecap="round"/>
-  <path d="M452 80 L370 190 L420 186 L350 262 L416 256 L400 300 L506 298 L488 252 L552 258 L486 184 L536 190 Z" fill="#3f7a46" stroke="#3b2a1a" stroke-width="10" stroke-linejoin="round"/>
   <text x="512" y="960" text-anchor="middle" font-family="monospace" font-size="120" font-weight="700" fill="#3b2a1a">rootshed</text>
 </svg>
