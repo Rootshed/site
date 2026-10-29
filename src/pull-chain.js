@@ -19,7 +19,7 @@
   var PULL = 24, PULL_MS = 130, RELEASE_MS = 70;
   // Share of the window's motion passed on to the hanging parts, and the cap per step.
   // Gravity here is gentle, so the whole of an ordinary drag would loop the chain over.
-  var SHAKE = 0.1, SHAKE_MAX = 20;
+  var SHAKE = 0.1, SCROLL_SHAKE = 0.25, SHAKE_MAX = 20;
 
   var bulb = { x: BOB.x, y: BOB.y, px: BOB.x, py: BOB.y };
   var pts = [], links = [], knob, string, hit, hitKnob;
@@ -165,17 +165,19 @@
     }
   }
   function cap(v) { return Math.max(-SHAKE_MAX, Math.min(SHAKE_MAX, v)); }
-  // Where the fixture sits on the screen, in viewBox units; scrolling cancels out.
+  // Where the fixture sits: window drags, resizes and page scrolling all move it.
   function fixtureMoved() {
     var r = lamp.getBoundingClientRect();
     if (!r.width) return;
-    var x = window.screenX + window.scrollX + r.left, y = window.screenY + window.scrollY + r.top;
+    // Window motion is gentle; scrolling is the only motion a phone has, so it hits harder.
+    var wx = window.screenX + window.scrollX + r.left, wy = window.screenY + window.scrollY + r.top;
+    var sx = -window.scrollX, sy = -window.scrollY;
     if (origin) {
-      var k = SHAKE * 120 / r.width;
-      jolt.x = cap(jolt.x + (x - origin.x) * k);
-      jolt.y = cap(jolt.y + (y - origin.y) * k);
+      var k = 120 / r.width;
+      jolt.x = cap(jolt.x + ((wx - origin.wx) * SHAKE + (sx - origin.sx) * SCROLL_SHAKE) * k);
+      jolt.y = cap(jolt.y + ((wy - origin.wy) * SHAKE + (sy - origin.sy) * SCROLL_SHAKE) * k);
     }
-    origin = { x: x, y: y };
+    origin = { wx: wx, wy: wy, sx: sx, sy: sy };
   }
 
   function transform(el, x, y, deg) {
@@ -226,10 +228,12 @@
     raf = requestAnimationFrame(frame);
   }
 
-  // The pointer drives the chain: its position picks which links it touches and
+  // The pointer (mouse, finger or pen) drives the chain: its position picks which links it touches and
   // its movement is the push, so a slow drag nudges and a fast swipe whips.
+  var lastX = null, lastY = null;
+  function forget() { lastX = lastY = null; }
   function push(ev) {
-    if (still.matches || ev.pointerType !== "mouse" || pullStart !== null) return;
+    if (still.matches || pullStart !== null) return;
     var m = svg.getScreenCTM();
     if (!m) return;
     var at = svg.createSVGPoint();
@@ -237,8 +241,12 @@
     at.y = ev.clientY;
     at = at.matrixTransform(m.inverse());
     var k = 1 / m.a;
-    var vx = Math.max(-8, Math.min(8, ev.movementX * k));
-    var vy = Math.max(-8, Math.min(8, ev.movementY * k));
+    // Not every browser reports movement for touch, so fall back to the last position.
+    var mx = ev.movementX, my = ev.movementY;
+    if (!mx && !my && lastX !== null) { mx = ev.clientX - lastX; my = ev.clientY - lastY; }
+    lastX = ev.clientX; lastY = ev.clientY;
+    var vx = Math.max(-8, Math.min(8, mx * k));
+    var vy = Math.max(-8, Math.min(8, my * k));
     if (!vx && !vy) return;
     for (var i = 0; i < pts.length; i++) {
       var cy = i === LINKS ? pts[i].y + 16 : pts[i].y;
@@ -254,6 +262,7 @@
   sync();
   lamp.hidden = false;
 
+  ["pointerup", "pointercancel", "pointerleave"].forEach(function (name) { lamp.addEventListener(name, forget); });
   hit.addEventListener("pointermove", push);
   hitKnob.addEventListener("pointermove", push);
   lamp.addEventListener("click", function () {
