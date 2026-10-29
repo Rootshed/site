@@ -239,6 +239,7 @@ img.member__avatar { background: none; }
   cursor: pointer;
   line-height: 0;
   -webkit-tap-highlight-color: transparent;
+  pointer-events: none;
 }
 .lamp[hidden] { display: none; }
 .lamp svg { width: 100%; height: auto; overflow: visible; }
@@ -249,6 +250,8 @@ img.member__avatar { background: none; }
 .lamp__glass { fill: var(--bulb); stroke: var(--border); stroke-width: 3; stroke-linejoin: round; }
 .lamp__filament { stroke: var(--border); stroke-width: 2; fill: none; }
 .lamp__glow { fill: var(--bulb-glow); }
+.lamp__hit { fill: none; stroke: transparent; stroke-width: 12; stroke-linejoin: round; pointer-events: stroke; cursor: pointer; }
+.lamp__hit--knob { pointer-events: all; stroke: none; }
 .lamp__link { fill: none; stroke: var(--border); stroke-width: 2.5; }
 .lamp__knob { fill: var(--wood); stroke: var(--border); stroke-width: 3; stroke-linejoin: round; }
 
