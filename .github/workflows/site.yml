@@ -14,6 +14,7 @@ jobs:
         env:
           SITE_URL: ${{ vars.SITE_URL }}
           CONTACT_EMAIL: ${{ vars.CONTACT_EMAIL }}
+          TEAM_MASON_URL: ${{ vars.TEAM_MASON_URL }}
         run: ./build.sh
       - uses: actions/upload-pages-artifact@v3
         with:
