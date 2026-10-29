@@ -1,7 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
   <rect width="1024" height="1024" fill="#f3ead7"/>
-  <!-- ground -->
-  <path d="M60 640 Q300 628 520 642 T964 636" stroke="#3b2a1a" stroke-width="14" fill="none" stroke-linecap="round"/>
   <!-- roots under the shed -->
   <g stroke="#3b2a1a" stroke-width="12" fill="none" stroke-linecap="round">
     <path d="M520 650 Q500 720 430 770 Q400 790 360 800"/>
@@ -10,14 +8,22 @@
     <path d="M470 700 Q440 740 400 740"/>
     <path d="M580 700 Q620 730 650 720"/>
   </g>
+  <defs>
+    <clipPath id="above-ground"><path d="M0 0 H1024 V636 L964 636 Q740 656 520 642 Q300 628 60 640 L0 640 Z"/></clipPath>
+  </defs>
+  <!-- shed, running down into the ground and cropped by it -->
+  <g clip-path="url(#above-ground)">
   <!-- shed -->
-  <path d="M250 640 L252 380 L612 372 L616 636" fill="#c9965a" stroke="#3b2a1a" stroke-width="14" stroke-linejoin="round"/>
+  <path d="M250 700 L252 380 L612 372 L616 700" fill="#c9965a" stroke="#3b2a1a" stroke-width="14" stroke-linejoin="round"/>
   <path d="M215 392 L250 300 L640 292 L660 386 Z" fill="#8a5a2b" stroke="#3b2a1a" stroke-width="14" stroke-linejoin="round"/>
   <!-- door with prompt -->
-  <path d="M340 640 L342 460 L520 456 L522 640" fill="#3b2a1a"/>
+  <path d="M340 700 L342 460 L520 456 L522 700" fill="#3b2a1a"/>
   <text x="352" y="570" font-family="monospace" font-size="86" font-weight="700" fill="#f3ead7">&gt;_</text>
   <!-- window -->
   <path d="M548 430 L596 428 L598 480 L550 482 Z" fill="#f3ead7" stroke="#3b2a1a" stroke-width="8"/>
+  </g>
+  <!-- ground -->
+  <path d="M60 640 Q300 628 520 642 T964 636" stroke="#3b2a1a" stroke-width="14" fill="none" stroke-linecap="round"/>
   <!-- pine tree on the roof -->
   <path d="M446 296 L440 215 L462 213" stroke="#3b2a1a" stroke-width="14" fill="none" stroke-linecap="round"/>
   <path d="M452 80 L370 190 L420 186 L350 262 L416 256 L400 300 L506 298 L488 252 L552 258 L486 184 L536 190 Z" fill="#3f7a46" stroke="#3b2a1a" stroke-width="10" stroke-linejoin="round"/>
