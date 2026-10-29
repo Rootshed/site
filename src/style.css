@@ -67,6 +67,7 @@ a:focus-visible,
 .bar,
 .hero,
 .projects,
+.team,
 .foot__inner {
   width: 100%;
   max-width: var(--max);
@@ -193,6 +194,43 @@ h2 { margin: 0 0 16px; font-size: 28px; }
   font-weight: 700;
 }
 
+.team { padding-block: 0 56px; }
+.members {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  max-width: 760px;
+}
+.member {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border: 3px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+.member__avatar {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  border: 3px solid var(--border);
+  border-radius: 12px;
+  background: var(--wood);
+  color: #3b2a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 700;
+}
+img.member__avatar { background: none; }
+.member__name { margin: 0; font-size: 22px; }
+.member div { min-width: 0; display: flex; flex-direction: column; }
+
 .foot { background: var(--foot); color: var(--foot-ink); margin-top: 8px; }
 .foot__inner {
   padding-block: 32px;
@@ -221,6 +259,8 @@ h2 { margin: 0 0 16px; font-size: 28px; }
   .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
   .card, .card__body { min-height: 320px; }
   .card__name { font-size: 28px; padding-inline: 14px; }
+  .team { padding-block: 0 72px; }
+  .members { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .foot__inner { padding-block: 40px; }
 }
 
