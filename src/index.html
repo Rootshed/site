@@ -8,7 +8,9 @@
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="logo.svg" type="image/svg+xml">
 <link rel="canonical" href="@@SITE_URL@@/">
+<script src="theme-init.js"></script>
 <link rel="stylesheet" href="style.css">
+<script src="pull-chain.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#projects">Skip to projects</a>
@@ -21,6 +23,20 @@
     <a href="#team">Team</a>
     <a href="#contact">Contact</a>
   </nav>
+  <button class="lamp" type="button" role="switch" aria-checked="false" aria-label="Dark mode" hidden>
+    <svg viewBox="0 0 120 340" aria-hidden="true" focusable="false">
+      <rect class="lamp__plate" x="36" y="0" width="48" height="8" rx="2"/>
+      <g class="lamp__bulb">
+        <circle class="lamp__glow" cx="60" cy="128" r="46"/>
+        <path class="lamp__wire" d="M60 8 V68"/>
+        <rect class="lamp__socket" x="49" y="66" width="22" height="30" rx="4"/>
+        <path class="lamp__wire" d="M71 84 Q86 84 86 94"/>
+        <path class="lamp__glass" d="M52 96 Q40 108 40 126 A20 20 0 0 0 80 126 Q80 108 68 96 Z"/>
+        <path class="lamp__filament" d="M54 128 Q60 138 66 128"/>
+      </g>
+      <g class="lamp__chain"></g>
+    </svg>
+  </button>
 </header>
 
 <main>

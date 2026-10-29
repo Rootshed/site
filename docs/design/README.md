@@ -8,7 +8,7 @@ It is private to the owner; outsiders cannot open it. No exported snapshot exist
 
 | Page | Covers |
 |---|---|
-| Storyboard | Home page: desktop, mobile light, mobile dark |
+| Storyboard | Home page: desktop, mobile light, mobile dark, theme switch (bulb and pull chain) |
 | Design tokens | Style palette, type, shape, states, and the project-card layers |
 | Notes | Decisions and open questions |
 
