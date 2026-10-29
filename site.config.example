@@ -1,0 +1,9 @@
+# Copy to site.config (gitignored) and edit. Environment variables of the
+# same name override this file.
+
+# Public origin of the site, no trailing slash. Leave empty to omit the
+# canonical link.
+SITE_URL=
+
+# Address shown in the footer.
+CONTACT_EMAIL=contact@example.com
