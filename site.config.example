@@ -5,5 +5,6 @@
 # canonical link.
 SITE_URL=
 
-# Address shown in the footer.
-CONTACT_EMAIL=contact@example.com
+# Address shown in the footer. Use a real, existing address (the studio has a
+# support@ one); do not make up others.
+CONTACT_EMAIL=support@example.com

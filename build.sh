@@ -9,7 +9,7 @@ cd "$(dirname "$0")"
 env_site_url=${SITE_URL-}
 env_contact_email=${CONTACT_EMAIL-}
 SITE_URL=
-CONTACT_EMAIL=contact@example.com
+CONTACT_EMAIL=support@example.com
 if [ -f site.config ]; then
   # shellcheck disable=SC1091
   . ./site.config
