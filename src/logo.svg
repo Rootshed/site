@@ -9,7 +9,7 @@
     <path d="M580 700 Q620 730 650 720"/>
   </g>
   <!-- pine tree behind the shed, above the roots -->
-  <g transform="translate(68 30)">
+  <g transform="translate(68 6)">
   <path d="M446 296 L440 215 L462 213" stroke="#3b2a1a" stroke-width="14" fill="none" stroke-linecap="round"/>
   <path d="M452 80 L370 190 L420 186 L350 262 L416 256 L400 300 L506 298 L488 252 L552 258 L486 184 L536 190 Z" fill="#3f7a46" stroke="#3b2a1a" stroke-width="10" stroke-linejoin="round"/>
   </g>
