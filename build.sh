@@ -35,4 +35,10 @@ fi
 sed -i.bak "s|@@CONTACT_EMAIL@@|$CONTACT_EMAIL|g" dist/index.html
 rm dist/*.bak
 
+# GitHub Pages reads the custom domain from this file.
+if [ -n "$SITE_URL" ]; then
+  host=${SITE_URL#*://}
+  printf '%s\n' "${host%%/*}" > dist/CNAME
+fi
+
 echo "built dist/"
