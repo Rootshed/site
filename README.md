@@ -1,6 +1,6 @@
 # Rootshed site
 
-Static home page for the Rootshed studio. Plain HTML and CSS: no scripts, no
+Static home page for the Rootshed studio. Plain HTML and CSS plus two small first-party scripts for the theme switch; no third-party code, no
 trackers, nothing fetched at runtime, so `dist/` can be served from anywhere.
 
 ## Build

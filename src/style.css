@@ -1,39 +1,28 @@
-/* Style tokens. Dark values override under prefers-color-scheme. */
+/* Style tokens: light-dark(light, dark). Follows the system unless <html data-theme> is set. */
 :root {
-  --ground: #f3ead7;
-  --surface: #e6d8b9;
-  --ink: #3b2a1a;
-  --border: #3b2a1a;
-  --accent: #2f6b3a;
-  --accent-ink: #f3ead7;
-  --chip: #3b2a1a;
-  --chip-ink: #f3ead7;
-  --foot: #3b2a1a;
+  color-scheme: light dark;
+  --ground: light-dark(#f3ead7, #1f1710);
+  --surface: light-dark(#e6d8b9, #2b2016);
+  --ink: light-dark(#3b2a1a, #f3ead7);
+  --border: light-dark(#3b2a1a, #c9b79a);
+  --accent: light-dark(#2f6b3a, #7fc08a);
+  --accent-ink: light-dark(#f3ead7, #1f1710);
+  --chip: light-dark(#3b2a1a, #f3ead7);
+  --chip-ink: light-dark(#f3ead7, #1f1710);
+  --foot: light-dark(#3b2a1a, #120d08);
   --foot-ink: #f3ead7;
   --wood: #c9965a;
   --roof: #8a5a2b;
   --leaf: #3f7a46;
-  --tape-dark: #3b2a1a;
+  --tape-dark: light-dark(#3b2a1a, #120d08);
+  --bulb: light-dark(#ffe08a, transparent);
+  --bulb-glow: light-dark(rgb(255 224 138 / 0.4), transparent);
   --font: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   --gutter: 16px;
   --max: 1200px;
 }
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ground: #1f1710;
-    --surface: #2b2016;
-    --ink: #f3ead7;
-    --border: #c9b79a;
-    --accent: #7fc08a;
-    --accent-ink: #1f1710;
-    --chip: #f3ead7;
-    --chip-ink: #1f1710;
-    --foot: #120d08;
-    --foot-ink: #f3ead7;
-    --tape-dark: #120d08;
-  }
-}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
 
 * { box-sizing: border-box; }
 
@@ -76,6 +65,7 @@ a:focus-visible,
 }
 
 .bar {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -83,8 +73,13 @@ a:focus-visible,
 }
 .bar__logo { border: 3px solid var(--border); border-radius: 8px; }
 .bar__name { flex-grow: 1; font-weight: 700; font-size: 18px; }
-.bar__nav { display: flex; gap: 4px; }
+.bar__nav { display: flex; gap: 4px; margin-right: 76px; }
 .bar__nav a { padding: 12px 8px; min-height: 44px; }
+
+@media (max-width: 479px) {
+  .bar__name { display: none; }
+  .bar__nav { flex-grow: 1; justify-content: flex-end; }
+}
 
 .hero {
   display: flex;
@@ -231,6 +226,32 @@ img.member__avatar { background: none; }
 .member__name { margin: 0; font-size: 22px; }
 .member div { min-width: 0; display: flex; flex-direction: column; }
 
+/* Theme switch: bulb on a wire with a pull chain, hangs from the top of the header. */
+.lamp {
+  position: absolute;
+  top: 0;
+  right: var(--gutter);
+  z-index: 2;
+  width: 76px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  line-height: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.lamp[hidden] { display: none; }
+.lamp svg { width: 100%; height: auto; overflow: visible; }
+.lamp:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; border-radius: 12px; }
+.lamp__plate { fill: var(--border); }
+.lamp__wire { stroke: var(--border); stroke-width: 3; fill: none; }
+.lamp__socket { fill: #6b5640; stroke: var(--border); stroke-width: 3; }
+.lamp__glass { fill: var(--bulb); stroke: var(--border); stroke-width: 3; stroke-linejoin: round; }
+.lamp__filament { stroke: var(--border); stroke-width: 2; fill: none; }
+.lamp__glow { fill: var(--bulb-glow); }
+.lamp__link { fill: none; stroke: var(--border); stroke-width: 2.5; }
+.lamp__knob { fill: var(--wood); stroke: var(--border); stroke-width: 3; stroke-linejoin: round; }
+
 .foot { background: var(--foot); color: var(--foot-ink); margin-top: 8px; }
 .foot__inner {
   padding-block: 32px;
@@ -248,6 +269,8 @@ img.member__avatar { background: none; }
   :root { --gutter: 32px; }
   .bar { padding-block: 24px; }
   .bar__logo { width: 44px; height: 44px; }
+  .lamp { width: 92px; }
+  .bar__nav { margin-right: 92px; }
   .hero { flex-direction: row; align-items: center; gap: 48px; padding-block: 48px 72px; }
   .hero__logo { width: 340px; max-width: none; align-self: auto; flex-shrink: 0; border-radius: 18px; }
   .hero__text { flex: 1 1 0; min-width: 0; }
