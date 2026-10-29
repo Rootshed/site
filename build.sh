@@ -39,7 +39,7 @@ sed -i.bak "s|@@CONTACT_EMAIL@@|$CONTACT_EMAIL|g" dist/index.html
 if [ -z "$TEAM_MASON_URL" ]; then
   mason_name="Mason Rhodes"
 else
-  mason_name="<a href=\"$TEAM_MASON_URL\">Mason Rhodes</a>"
+  mason_name="<a href=\"$TEAM_MASON_URL\" target=\"_blank\" rel=\"noopener noreferrer\">Mason Rhodes</a>"
 fi
 sed -i.bak "s|@@MASON_NAME@@|$mason_name|g" dist/index.html
 rm dist/*.bak
