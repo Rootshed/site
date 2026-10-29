@@ -12,17 +12,20 @@
   var dark = window.matchMedia("(prefers-color-scheme: dark)");
   var still = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-  var LINKS = 8, GAP = 20, STRING = 8, STEP = 1000 / 60, GRAVITY = 0.6;
+  var LINKS = 8, GAP = 20, STRING = 8, STEP = 1000 / 60, GRAVITY = 0.6, ITER = 32;
   var PIVOT = { x: 60, y: 8 }, BOB = { x: 60, y: 110 }, ARM = { x: 26, y: -16 };
   var WIRE = BOB.y - PIVOT.y;
-  var BULB_GIVE = 0.05; // inverse mass of the bulb next to a chain link: about 20x heavier
+  var BULB_GIVE = 0.03; // inverse mass of the bulb next to a chain link: about 30x heavier
   var PULL = 24, PULL_MS = 130, RELEASE_MS = 70;
+  // Share of the window's motion passed on to the hanging parts, and the cap per step.
+  // Gravity here is gentle, so the whole of an ordinary drag would loop the chain over.
+  var SHAKE = 0.1, SHAKE_MAX = 20;
 
   var bulb = { x: BOB.x, y: BOB.y, px: BOB.x, py: BOB.y };
   var pts = [], links = [], knob, string, hit, hitKnob;
   var tilt = 0, hole = { x: BOB.x + ARM.x, y: BOB.y + ARM.y };
   var pullStart = null, flipped = false;
-  var raf = 0, last = 0, acc = 0, onScreen = true, origin = null;
+  var raf = 0, last = 0, acc = 0, onScreen = true, origin = null, jolt = { x: 0, y: 0 };
 
   function isDark() {
     var set = root.dataset.theme;
@@ -44,10 +47,7 @@
   }
 
   function build() {
-    for (var i = 0; i <= LINKS; i++) {
-      var x = BOB.x + ARM.x, y = BOB.y + ARM.y + STRING + i * GAP;
-      pts.push({ x: x, y: y, px: x, py: y });
-    }
+    for (var i = 0; i <= LINKS; i++) pts.push({ x: 0, y: 0, px: 0, py: 0 });
     string = make("line", "lamp__wire");
     chainEl.appendChild(string);
     for (var j = 0; j < LINKS; j++) {
@@ -70,12 +70,22 @@
     chainEl.appendChild(knob);
   }
 
+  function rest() {
+    bulb.x = bulb.px = BOB.x; bulb.y = bulb.py = BOB.y;
+    for (var i = 0; i < pts.length; i++) {
+      var p = pts[i];
+      p.x = p.px = BOB.x + ARM.x;
+      p.y = p.py = BOB.y + ARM.y + STRING + i * GAP;
+    }
+    holeOf();
+  }
+
   // The socket's chain hole rides on the bulb and turns with it.
   function holeOf() {
     tilt = Math.atan2(-(bulb.x - PIVOT.x), bulb.y - PIVOT.y);
     var c = Math.cos(tilt), s = Math.sin(tilt);
-    hole = { x: bulb.x + ARM.x * c - ARM.y * s, y: bulb.y + ARM.x * s + ARM.y * c };
-    return hole;
+    hole.x = bulb.x + ARM.x * c - ARM.y * s;
+    hole.y = bulb.y + ARM.x * s + ARM.y * c;
   }
 
   function pullDown(now) {
@@ -94,13 +104,30 @@
     p.x += vx; p.y += vy + GRAVITY;
   }
 
-  // Pull two points to their rest distance, the lighter one moving further.
-  function link(u, v, rest, wu, wv, reactOnBulb) {
+  // Pull two equal points to their rest distance.
+  function link(u, v, rest) {
     var ex = v.x - u.x, ey = v.y - u.y, d = Math.sqrt(ex * ex + ey * ey) || 1;
-    var f = (d - rest) / d / (wu + wv);
-    u.x += ex * f * wu; u.y += ey * f * wu;
-    v.x -= ex * f * wv; v.y -= ey * f * wv;
-    if (reactOnBulb) { bulb.x += ex * f * wu; bulb.y += ey * f * wu; }
+    var f = (d - rest) / d / 2;
+    u.x += ex * f; u.y += ey * f;
+    v.x -= ex * f; v.y -= ey * f;
+  }
+
+  // The hole is a point on the lamp, which hangs rigid from PIVOT, so a displacement
+  // there can only turn the lamp about the pivot, and the bulb swings with it.
+  function turn(dx, dy) {
+    var hx = hole.x - PIVOT.x, hy = hole.y - PIVOT.y;
+    var a = (dy * hx - dx * hy) / (hx * hx + hy * hy);
+    var bx = bulb.x - PIVOT.x, by = bulb.y - PIVOT.y;
+    bulb.x -= a * by; bulb.y += a * bx;
+  }
+
+  // The string from the socket hole to the chain top: the chain takes most of the
+  // correction and the heavy lamp feels the rest as a tug on its hole.
+  function tether(rest) {
+    var p = pts[0], ex = p.x - hole.x, ey = p.y - hole.y, d = Math.sqrt(ex * ex + ey * ey) || 1;
+    var f = (d - rest) / d / (1 + BULB_GIVE);
+    p.x -= ex * f; p.y -= ey * f;
+    turn(ex * f * BULB_GIVE, ey * f * BULB_GIVE);
   }
 
   function wire() {
@@ -113,15 +140,23 @@
     var stringRest = STRING + pullDown(now);
     integrate(bulb, 0.995);
     for (var i = 0; i < pts.length; i++) integrate(pts[i], 0.985);
-    for (var k = 0; k < 8; k++) {
+    // The chain's weight hangs off-centre on the hole every step; the lamp is drawn
+    // hanging straight with it, so that much is held up for free.
+    wire();
+    holeOf();
+    turn(0, -(LINKS + 1) * GRAVITY * BULB_GIVE);
+    for (var k = 0; k < ITER; k++) {
       wire();
-      link(holeOf(), pts[0], stringRest, BULB_GIVE, 1, true);
-      for (var m = 1; m < pts.length; m++) link(pts[m - 1], pts[m], GAP, 1, 1, false);
+      holeOf();
+      tether(stringRest);
+      for (var m = 1; m < pts.length; m++) link(pts[m - 1], pts[m], GAP);
     }
+    wire();
+    holeOf();
   }
 
-  // Moving the fixture (window dragged or resized) leaves everything hanging in place
-  // in the world, so in the fixture's own frame it all shifts the other way.
+  // Moving the fixture (window dragged or resized) leaves everything hanging where it
+  // was in the world, so in the fixture's own frame it all shifts the other way.
   function shake(dx, dy) {
     var all = pts.concat(bulb);
     for (var i = 0; i < all.length; i++) {
@@ -129,15 +164,16 @@
       all[i].y -= dy; all[i].py -= dy;
     }
   }
+  function cap(v) { return Math.max(-SHAKE_MAX, Math.min(SHAKE_MAX, v)); }
+  // Where the fixture sits on the screen, in viewBox units; scrolling cancels out.
   function fixtureMoved() {
     var r = lamp.getBoundingClientRect();
     if (!r.width) return;
     var x = window.screenX + window.scrollX + r.left, y = window.screenY + window.scrollY + r.top;
     if (origin) {
-      var k = 120 / r.width;
-      var dx = Math.max(-60, Math.min(60, (x - origin.x) * k));
-      var dy = Math.max(-60, Math.min(60, (y - origin.y) * k));
-      if (dx || dy) shake(dx, dy);
+      var k = SHAKE * 120 / r.width;
+      jolt.x = cap(jolt.x + (x - origin.x) * k);
+      jolt.y = cap(jolt.y + (y - origin.y) * k);
     }
     origin = { x: x, y: y };
   }
@@ -169,9 +205,16 @@
     acc += Math.min(now - last, 100);
     last = now;
     fixtureMoved();
-    while (acc >= STEP) { step(now); acc -= STEP; }
+    // The frame's window motion is spread over its steps; with none it waits for the next.
+    var n = Math.floor(acc / STEP);
+    for (var i = 0; i < n; i++) {
+      if (jolt.x || jolt.y) shake(jolt.x / n, jolt.y / n);
+      step(now);
+    }
+    if (n) { acc -= n * STEP; jolt.x = jolt.y = 0; }
     draw();
-    raf = running() ? requestAnimationFrame(frame) : 0;
+    if (running()) raf = requestAnimationFrame(frame);
+    else { raf = 0; pullDown(Infinity); } // a pull cut short off screen still switches
   }
 
   function run() {
@@ -179,6 +222,7 @@
     last = performance.now();
     acc = 0;
     origin = null;
+    jolt.x = jolt.y = 0;
     raf = requestAnimationFrame(frame);
   }
 
@@ -205,7 +249,7 @@
   }
 
   build();
-  holeOf();
+  rest();
   draw();
   sync();
   lamp.hidden = false;
@@ -213,14 +257,18 @@
   hit.addEventListener("pointermove", push);
   hitKnob.addEventListener("pointermove", push);
   lamp.addEventListener("click", function () {
-    if (still.matches) { flip(); return; }
+    if (!raf) { flip(); return; } // not animating (reduced motion, off screen): just switch
     if (pullStart !== null) return;
     pullStart = performance.now();
     flipped = false;
   });
   dark.addEventListener("change", sync);
-  still.addEventListener("change", function () { if (still.matches) draw(); else run(); });
-  document.addEventListener("visibilitychange", run);
+  still.addEventListener("change", function () {
+    if (still.matches) { rest(); draw(); } else run();
+  });
+  // A hidden tab pauses frames rather than stopping them, so the one still pending
+  // must not see where the window went in the meantime.
+  document.addEventListener("visibilitychange", function () { origin = null; run(); });
   if ("IntersectionObserver" in window) {
     new IntersectionObserver(function (entries) {
       onScreen = entries[entries.length - 1].isIntersecting;
