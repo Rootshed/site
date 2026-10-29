@@ -239,7 +239,6 @@ img.member__avatar { background: none; }
   cursor: pointer;
   line-height: 0;
   -webkit-tap-highlight-color: transparent;
-  pointer-events: none;
 }
 .lamp[hidden] { display: none; }
 .lamp svg { width: 100%; height: auto; overflow: visible; }
