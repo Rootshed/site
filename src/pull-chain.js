@@ -1,6 +1,7 @@
 // Theme switch: a bulb on a wire with a pull chain. The bulb is a heavy pendulum and
 // the chain a verlet rope hanging from its socket. It runs whenever it is on screen,
-// the pointer pushes the chain, and moving or resizing the window shakes the fixture.
+// the pointer pushes the chain or, held down, drags it about, and moving or resizing
+// the window shakes the fixture.
 (function () {
   var lamp = document.querySelector(".lamp");
   if (!lamp) return;
@@ -16,7 +17,7 @@
   var PIVOT = { x: 60, y: 8 }, BOB = { x: 60, y: 110 }, ARM = { x: 26, y: -16 };
   var WIRE = BOB.y - PIVOT.y;
   var BULB_GIVE = 0.03; // inverse mass of the bulb next to a chain link: about 30x heavier
-  var PULL = 24, PULL_MS = 130, RELEASE_MS = 70;
+  var PULL = 24, PULL_MS = 130, RELEASE_MS = 70, MAX_PULL = 40;
   // Share of the window's motion passed on to the hanging parts, and the cap per step.
   // Gravity here is gentle, so the whole of an ordinary drag would loop the chain over.
   var SHAKE = 0.1, SCROLL_SHAKE = 0.25, SHAKE_MAX = 20;
@@ -25,6 +26,7 @@
   var pts = [], links = [], knob, string, hit, hitKnob;
   var tilt = 0, hole = { x: BOB.x + ARM.x, y: BOB.y + ARM.y };
   var pullStart = null, flipped = false;
+  var grab = null, held = { x: 0, y: 0 }, extend = 0;
   var raf = 0, last = 0, acc = 0, onScreen = true, origin = null, jolt = { x: 0, y: 0 };
 
   function isDark() {
@@ -136,10 +138,30 @@
     bulb.y = PIVOT.y + dy * WIRE / d;
   }
 
+  // While held, the knob follows the pointer, as far as the chain and the string
+  // paying out of the socket reach.
+  function holdTarget(now) {
+    var ease = Math.min(1, (now - grab.t0) / PULL_MS);
+    var tx = grab.base.x + (grab.cur.x - grab.at.x);
+    var ty = grab.base.y + PULL * (1 - Math.pow(1 - ease, 3)) + (grab.cur.y - grab.at.y);
+    var vx = tx - hole.x, vy = ty - hole.y, d = Math.sqrt(vx * vx + vy * vy) || 1;
+    var reach = LINKS * GAP + STRING + MAX_PULL;
+    if (d > reach) { vx *= reach / d; vy *= reach / d; d = reach; }
+    extend = Math.max(0, Math.min(MAX_PULL, d - LINKS * GAP - STRING));
+    // A hand is not instant, so the knob eases to the target.
+    var dx = hole.x + vx - held.x, dy = hole.y + vy - held.y;
+    var m = Math.min(1, 15 / (Math.sqrt(dx * dx + dy * dy) || 1)) * 0.5;
+    held.x += dx * m; held.y += dy * m;
+  }
+
   function step(now) {
-    var stringRest = STRING + pullDown(now);
+    if (grab) holdTarget(now);
+    else extend = extend < 0.01 ? 0 : extend * 0.65;
+    var stringRest = STRING + Math.max(pullDown(now), extend);
+    var end = pts[LINKS];
     integrate(bulb, 0.995);
     for (var i = 0; i < pts.length; i++) integrate(pts[i], 0.985);
+    if (grab) { end.x = held.x; end.y = held.y; }
     // The chain's weight hangs off-centre on the hole every step; the lamp is drawn
     // hanging straight with it, so that much is held up for free.
     wire();
@@ -150,6 +172,7 @@
       holeOf();
       tether(stringRest);
       for (var m = 1; m < pts.length; m++) link(pts[m - 1], pts[m], GAP);
+      if (grab) { end.x = held.x; end.y = held.y; }
     }
     wire();
     holeOf();
@@ -216,7 +239,7 @@
     if (n) { acc -= n * STEP; jolt.x = jolt.y = 0; }
     draw();
     if (running()) raf = requestAnimationFrame(frame);
-    else { raf = 0; pullDown(Infinity); } // a pull cut short off screen still switches
+    else { raf = 0; grab = null; pullDown(Infinity); } // a pull cut short off screen still switches
   }
 
   function run() {
@@ -230,17 +253,21 @@
 
   // The pointer (mouse, finger or pen) drives the chain: its position picks which links it touches and
   // its movement is the push, so a slow drag nudges and a fast swipe whips.
-  var lastX = null, lastY = null;
-  function forget() { lastX = lastY = null; }
-  function push(ev) {
-    if (still.matches || pullStart !== null) return;
+  function toSvg(ev) {
     var m = svg.getScreenCTM();
-    if (!m) return;
+    if (!m) return null;
     var at = svg.createSVGPoint();
     at.x = ev.clientX;
     at.y = ev.clientY;
-    at = at.matrixTransform(m.inverse());
-    var k = 1 / m.a;
+    return at.matrixTransform(m.inverse());
+  }
+  var lastX = null, lastY = null;
+  function forget() { lastX = lastY = null; }
+  function push(ev) {
+    if (still.matches || pullStart !== null || grab) return;
+    var at = toSvg(ev);
+    if (!at) return;
+    var k = 120 / lamp.getBoundingClientRect().width;
     // Not every browser reports movement for touch, so fall back to the last position.
     var mx = ev.movementX, my = ev.movementY;
     if (!mx && !my && lastX !== null) { mx = ev.clientX - lastX; my = ev.clientY - lastY; }
@@ -265,9 +292,31 @@
   ["pointerup", "pointercancel", "pointerleave"].forEach(function (name) { lamp.addEventListener(name, forget); });
   hit.addEventListener("pointermove", push);
   hitKnob.addEventListener("pointermove", push);
-  lamp.addEventListener("click", function () {
+  // Press pulls the cord and holds it; letting go releases it and switches the theme.
+  function release(commit) {
+    if (!grab) return;
+    grab = null;
+    if (commit) flip();
+  }
+  lamp.addEventListener("pointerdown", function (ev) {
+    if (!raf || ev.button > 0 || grab || pullStart !== null) return;
+    var at = toSvg(ev);
+    if (!at) return;
+    var end = pts[LINKS];
+    grab = { id: ev.pointerId, at: at, cur: at, base: { x: end.x, y: end.y }, t0: performance.now() };
+    held.x = end.x; held.y = end.y;
+    try { lamp.setPointerCapture(ev.pointerId); } catch (e) {}
+  });
+  lamp.addEventListener("pointermove", function (ev) {
+    if (grab && ev.pointerId === grab.id) grab.cur = toSvg(ev) || grab.cur;
+  });
+  lamp.addEventListener("pointerup", function (ev) { if (grab && ev.pointerId === grab.id) release(true); });
+  lamp.addEventListener("pointercancel", function (ev) { if (grab && ev.pointerId === grab.id) release(false); });
+  lamp.addEventListener("click", function (ev) {
+    // A pointer press is handled on release; this is the keyboard, or no animation to grab.
+    if (ev.detail > 0 && raf) return;
     if (!raf) { flip(); return; } // not animating (reduced motion, off screen): just switch
-    if (pullStart !== null) return;
+    if (pullStart !== null || grab) return;
     pullStart = performance.now();
     flipped = false;
   });
