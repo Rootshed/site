@@ -239,8 +239,9 @@ img.member__avatar { background: none; }
   cursor: pointer;
   line-height: 0;
   -webkit-tap-highlight-color: transparent;
-  touch-action: pan-y; /* sideways swipes reach the chain, vertical ones still scroll */
+  touch-action: none; /* a finger on the lamp drags the chain instead of scrolling */
 }
+.lamp:active { cursor: grabbing; }
 .lamp[hidden] { display: none; }
 .lamp svg { width: 100%; height: auto; overflow: visible; }
 .lamp:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; border-radius: 12px; }
