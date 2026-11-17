@@ -1,7 +1,3 @@
-// Theme switch: a bulb on a wire with a pull chain. The bulb is a heavy pendulum and
-// the chain a verlet rope hanging from its socket. It runs whenever it is on screen,
-// the pointer pushes the chain or, held down, drags it about, and moving or resizing
-// the window shakes the fixture.
 (function () {
   var lamp = document.querySelector(".lamp");
   if (!lamp) return;
@@ -16,10 +12,8 @@
   var LINKS = 8, GAP = 20, STRING = 8, STEP = 1000 / 60, GRAVITY = 0.6, ITER = 32;
   var PIVOT = { x: 60, y: 8 }, BOB = { x: 60, y: 110 }, ARM = { x: 26, y: -16 };
   var WIRE = BOB.y - PIVOT.y;
-  var BULB_GIVE = 0.03; // inverse mass of the bulb next to a chain link: about 30x heavier
+  var BULB_GIVE = 0.03;
   var PULL = 24, PULL_MS = 130, RELEASE_MS = 70, MAX_PULL = 40;
-  // Share of the window's motion passed on to the hanging parts, and the cap per step.
-  // Gravity here is gentle, so the whole of an ordinary drag would loop the chain over.
   var SHAKE = 0.1, SCROLL_SHAKE = 0.25, SHAKE_MAX = 20;
 
   var bulb = { x: BOB.x, y: BOB.y, px: BOB.x, py: BOB.y };
@@ -82,7 +76,6 @@
     holeOf();
   }
 
-  // The socket's chain hole rides on the bulb and turns with it.
   function holeOf() {
     tilt = Math.atan2(-(bulb.x - PIVOT.x), bulb.y - PIVOT.y);
     var c = Math.cos(tilt), s = Math.sin(tilt);
@@ -106,7 +99,6 @@
     p.x += vx; p.y += vy + GRAVITY;
   }
 
-  // Pull two equal points to their rest distance.
   function link(u, v, rest) {
     var ex = v.x - u.x, ey = v.y - u.y, d = Math.sqrt(ex * ex + ey * ey) || 1;
     var f = (d - rest) / d / 2;
@@ -114,8 +106,6 @@
     v.x -= ex * f; v.y -= ey * f;
   }
 
-  // The hole is a point on the lamp, which hangs rigid from PIVOT, so a displacement
-  // there can only turn the lamp about the pivot, and the bulb swings with it.
   function turn(dx, dy) {
     var hx = hole.x - PIVOT.x, hy = hole.y - PIVOT.y;
     var a = (dy * hx - dx * hy) / (hx * hx + hy * hy);
@@ -123,8 +113,6 @@
     bulb.x -= a * by; bulb.y += a * bx;
   }
 
-  // The string from the socket hole to the chain top: the chain takes most of the
-  // correction and the heavy lamp feels the rest as a tug on its hole.
   function tether(rest) {
     var p = pts[0], ex = p.x - hole.x, ey = p.y - hole.y, d = Math.sqrt(ex * ex + ey * ey) || 1;
     var f = (d - rest) / d / (1 + BULB_GIVE);
@@ -138,8 +126,6 @@
     bulb.y = PIVOT.y + dy * WIRE / d;
   }
 
-  // While held, the knob follows the pointer, as far as the chain and the string
-  // paying out of the socket reach.
   function holdTarget(now) {
     var ease = Math.min(1, (now - grab.t0) / PULL_MS);
     var tx = grab.base.x + (grab.cur.x - grab.at.x);
@@ -148,7 +134,6 @@
     var reach = LINKS * GAP + STRING + MAX_PULL;
     if (d > reach) { vx *= reach / d; vy *= reach / d; d = reach; }
     extend = Math.max(0, Math.min(MAX_PULL, d - LINKS * GAP - STRING));
-    // A hand is not instant, so the knob eases to the target.
     var dx = hole.x + vx - held.x, dy = hole.y + vy - held.y;
     var m = Math.min(1, 15 / (Math.sqrt(dx * dx + dy * dy) || 1)) * 0.5;
     held.x += dx * m; held.y += dy * m;
@@ -162,8 +147,6 @@
     integrate(bulb, 0.995);
     for (var i = 0; i < pts.length; i++) integrate(pts[i], 0.985);
     if (grab) { end.x = held.x; end.y = held.y; }
-    // The chain's weight hangs off-centre on the hole every step; the lamp is drawn
-    // hanging straight with it, so that much is held up for free.
     wire();
     holeOf();
     turn(0, -(LINKS + 1) * GRAVITY * BULB_GIVE);
@@ -178,8 +161,6 @@
     holeOf();
   }
 
-  // Moving the fixture (window dragged or resized) leaves everything hanging where it
-  // was in the world, so in the fixture's own frame it all shifts the other way.
   function shake(dx, dy) {
     var all = pts.concat(bulb);
     for (var i = 0; i < all.length; i++) {
@@ -188,11 +169,9 @@
     }
   }
   function cap(v) { return Math.max(-SHAKE_MAX, Math.min(SHAKE_MAX, v)); }
-  // Where the fixture sits: window drags, resizes and page scrolling all move it.
   function fixtureMoved() {
     var r = lamp.getBoundingClientRect();
     if (!r.width) return;
-    // Window motion is gentle; scrolling is the only motion a phone has, so it hits harder.
     var wx = window.screenX + window.scrollX + r.left, wy = window.screenY + window.scrollY + r.top;
     var sx = -window.scrollX, sy = -window.scrollY;
     if (origin) {
@@ -230,7 +209,6 @@
     acc += Math.min(now - last, 100);
     last = now;
     fixtureMoved();
-    // The frame's window motion is spread over its steps; with none it waits for the next.
     var n = Math.floor(acc / STEP);
     for (var i = 0; i < n; i++) {
       if (jolt.x || jolt.y) shake(jolt.x / n, jolt.y / n);
@@ -239,7 +217,7 @@
     if (n) { acc -= n * STEP; jolt.x = jolt.y = 0; }
     draw();
     if (running()) raf = requestAnimationFrame(frame);
-    else { raf = 0; grab = null; pullDown(Infinity); } // a pull cut short off screen still switches
+    else { raf = 0; grab = null; pullDown(Infinity); }
   }
 
   function run() {
@@ -251,8 +229,6 @@
     raf = requestAnimationFrame(frame);
   }
 
-  // The pointer (mouse, finger or pen) drives the chain: its position picks which links it touches and
-  // its movement is the push, so a slow drag nudges and a fast swipe whips.
   function toSvg(ev) {
     var m = svg.getScreenCTM();
     if (!m) return null;
@@ -268,7 +244,6 @@
     var at = toSvg(ev);
     if (!at) return;
     var k = 120 / lamp.getBoundingClientRect().width;
-    // Not every browser reports movement for touch, so fall back to the last position.
     var mx = ev.movementX, my = ev.movementY;
     if (!mx && !my && lastX !== null) { mx = ev.clientX - lastX; my = ev.clientY - lastY; }
     lastX = ev.clientX; lastY = ev.clientY;
@@ -292,7 +267,6 @@
   ["pointerup", "pointercancel", "pointerleave"].forEach(function (name) { lamp.addEventListener(name, forget); });
   hit.addEventListener("pointermove", push);
   hitKnob.addEventListener("pointermove", push);
-  // Press pulls the cord and holds it; letting go releases it and switches the theme.
   function release(commit) {
     if (!grab) return;
     grab = null;
@@ -313,9 +287,8 @@
   lamp.addEventListener("pointerup", function (ev) { if (grab && ev.pointerId === grab.id) release(true); });
   lamp.addEventListener("pointercancel", function (ev) { if (grab && ev.pointerId === grab.id) release(false); });
   lamp.addEventListener("click", function (ev) {
-    // A pointer press is handled on release; this is the keyboard, or no animation to grab.
     if (ev.detail > 0 && raf) return;
-    if (!raf) { flip(); return; } // not animating (reduced motion, off screen): just switch
+    if (!raf) { flip(); return; }
     if (pullStart !== null || grab) return;
     pullStart = performance.now();
     flipped = false;
@@ -324,8 +297,6 @@
   still.addEventListener("change", function () {
     if (still.matches) { rest(); draw(); } else run();
   });
-  // A hidden tab pauses frames rather than stopping them, so the one still pending
-  // must not see where the window went in the meantime.
   document.addEventListener("visibilitychange", function () { origin = null; run(); });
   if ("IntersectionObserver" in window) {
     new IntersectionObserver(function (entries) {

@@ -29,7 +29,3 @@ Serve `dist/` with any static file server, for example:
 ```sh
 python3 -m http.server --directory dist 8000
 ```
-
-## Design
-
-See [docs/design/README.md](docs/design/README.md).
