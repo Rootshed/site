@@ -20,7 +20,6 @@ jobs:
         with:
           path: dist
 
-  # Publishes only when the repository variable DEPLOY_PAGES is "true".
   deploy:
     needs: build
     if: github.ref == 'refs/heads/main' && vars.DEPLOY_PAGES == 'true'

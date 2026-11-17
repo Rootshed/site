@@ -1,11 +1,8 @@
 #!/bin/sh
-# Copies src/ to dist/ and fills in the values from site.config.
-# Environment variables override the config file.
 set -eu
 
 cd "$(dirname "$0")"
 
-# Remember environment overrides, then load the config file if present.
 env_site_url=${SITE_URL-}
 env_contact_email=${CONTACT_EMAIL-}
 env_team_url=${TEAM_MASON_URL-}
@@ -20,7 +17,6 @@ fi
 [ -z "$env_contact_email" ] || CONTACT_EMAIL=$env_contact_email
 [ -z "$env_team_url" ] || TEAM_MASON_URL=$env_team_url
 
-# A value goes into sed and HTML, so keep it to plain URL / address characters.
 case "$SITE_URL$CONTACT_EMAIL$TEAM_MASON_URL" in
   *[!A-Za-z0-9.@:/_+-]*) echo "build: SITE_URL, CONTACT_EMAIL and TEAM_MASON_URL may only contain A-Z a-z 0-9 . @ : / _ + -" >&2; exit 1 ;;
 esac
@@ -44,7 +40,6 @@ fi
 sed -i.bak "s|@@MASON_NAME@@|$mason_name|g" dist/index.html
 rm dist/*.bak
 
-# GitHub Pages reads the custom domain from this file.
 if [ -n "$SITE_URL" ]; then
   host=${SITE_URL#*://}
   printf '%s\n' "${host%%/*}" > dist/CNAME
